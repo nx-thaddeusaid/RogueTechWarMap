@@ -94,4 +94,36 @@ describe('BottomFilterPanel', () => {
     const removed = removeSpy.mock.calls.filter(([event]) => event === 'resize');
     expect(removed.length).toBeGreaterThanOrEqual(added.length);
   });
+
+  it('shows tooltip on mouseEnter and hides on mouseLeave (desktop)', () => {
+    Object.defineProperty(window, 'innerWidth', { writable: true, configurable: true, value: 1024 });
+    const { getByText, queryByText } = render(React.createElement(BottomFilterPanel, defaultProps));
+    fireEvent.click(getByText('up'));
+
+    const infoBtn = getByText('i');
+    expect(queryByText(/Only factions/i)).toBeNull();
+
+    fireEvent.mouseEnter(infoBtn);
+    expect(queryByText(/Only factions/i)).toBeTruthy();
+
+    fireEvent.mouseLeave(infoBtn);
+    expect(queryByText(/Only factions/i)).toBeNull();
+  });
+
+  it('toggles tooltip on click when in mobile mode (innerWidth < 768)', () => {
+    Object.defineProperty(window, 'innerWidth', { writable: true, configurable: true, value: 375 });
+    const { getByText, queryByText } = render(React.createElement(BottomFilterPanel, defaultProps));
+    fireEvent.click(getByText('up'));
+
+    const infoBtn = getByText('i');
+    expect(queryByText(/Only factions/i)).toBeNull();
+
+    fireEvent.click(infoBtn);
+    expect(queryByText(/Only factions/i)).toBeTruthy();
+
+    fireEvent.click(infoBtn);
+    expect(queryByText(/Only factions/i)).toBeNull();
+
+    Object.defineProperty(window, 'innerWidth', { writable: true, configurable: true, value: 1024 });
+  });
 });

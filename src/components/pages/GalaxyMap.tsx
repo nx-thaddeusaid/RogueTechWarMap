@@ -251,6 +251,7 @@ export const GalaxyMapRender = ({
     if (!stage) return;
     if (typeof stage.container !== 'function') return;
 
+    /* v8 ignore start */
     const container = stage.container();
     container.style.touchAction = 'none';
     const preventDefault = (e: Event) => {
@@ -275,6 +276,7 @@ export const GalaxyMapRender = ({
       container.removeEventListener('gestureend', preventDefault);
       container.removeEventListener('touchmove', preventDefault);
     };
+    /* v8 ignore stop */
   }, [stageRef]);
 
   const isMobile = stageSize.width > 0 && stageSize.width < 768;

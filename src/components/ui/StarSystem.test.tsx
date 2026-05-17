@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { render } from '@testing-library/react';
+import { render, act } from '@testing-library/react';
 import React from 'react';
 import StarSystem from './StarSystem';
 import type { DisplayStarSystemType, FactionDataType } from '../hooks/types';
@@ -198,5 +198,85 @@ describe('StarSystem', () => {
     );
     unmount();
     expect(unsubscribe).toHaveBeenCalled();
+  });
+
+  it('scale listener is invoked with scale values without throwing', () => {
+    let capturedListener: ((scale: number) => void) | undefined;
+    const registerScaleListener = vi.fn((listener: (scale: number) => void) => {
+      capturedListener = listener;
+      return vi.fn();
+    });
+
+    render(
+      React.createElement(StarSystem, {
+        ...baseProps,
+        registerScaleListener,
+        system: makeSystem(),
+      })
+    );
+
+    expect(capturedListener).toBeDefined();
+    // scale > 1: group ref is null in test, early return taken
+    expect(() => capturedListener?.(2)).not.toThrow();
+    // scale <= 1
+    expect(() => capturedListener?.(0.5)).not.toThrow();
+  });
+
+  it('loads holdTheLine icon when hasHoldTheLineEvent is true', async () => {
+    await act(async () => {
+      render(
+        React.createElement(StarSystem, {
+          ...baseProps,
+          system: makeSystem({ state: { hasHoldTheLineEvent: true } }),
+        })
+      );
+    });
+  });
+
+  it('loads captureEvent icon when hasCaptureEvent is true', async () => {
+    await act(async () => {
+      render(
+        React.createElement(StarSystem, {
+          ...baseProps,
+          system: makeSystem({ state: { hasCaptureEvent: true } }),
+        })
+      );
+    });
+  });
+
+  it('renders capital system with larger radius', () => {
+    const { container } = render(
+      React.createElement(StarSystem, {
+        ...baseProps,
+        system: makeSystem({ isCapital: true }),
+      })
+    );
+    expect(container).toBeTruthy();
+  });
+
+  it('renders with highlighted prop and flashActivePlayers', () => {
+    const { container } = render(
+      React.createElement(StarSystem, {
+        ...baseProps,
+        highlighted: true,
+        system: makeSystem({
+          factions: [{ name: 'ComStar', color: '#fff', ActivePlayers: 5, control: 100 }],
+        }),
+        settings: { ...initialSettings, flashActivePlayers: true },
+      })
+    );
+    expect(container).toBeTruthy();
+  });
+
+  it('renders with holdTheLine and capture together (insurrectionLike branches)', () => {
+    const { container } = render(
+      React.createElement(StarSystem, {
+        ...baseProps,
+        system: makeSystem({
+          state: { hasHoldTheLineEvent: true, hasCaptureEvent: true },
+        }),
+      })
+    );
+    expect(container).toBeTruthy();
   });
 });

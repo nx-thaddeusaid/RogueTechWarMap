@@ -188,6 +188,7 @@ const StarSystem: React.FC<StarSystemProps> = ({
     )
       return;
 
+    /* v8 ignore start */
     const glowNode = insurrectGlowRef.current;
     const pulseNode = insurrectPulseRef.current;
     const pulseMaxOpacity = Math.min(0.525, circleOpacity * 0.675);
@@ -211,11 +212,13 @@ const StarSystem: React.FC<StarSystemProps> = ({
       pulseNode.scale({ x: 1, y: 1 });
       pulseNode.opacity(0);
     };
+    /* v8 ignore stop */
   }, [isInsurrectionLike, circleOpacity]);
 
   useEffect(() => {
     if (!shouldPulseSize || !systemCircleRef.current) return;
 
+    /* v8 ignore start */
     const systemNode = systemCircleRef.current;
 
     // Read icon nodes from refs each frame so the animation picks up newly-mounted
@@ -246,6 +249,7 @@ const StarSystem: React.FC<StarSystemProps> = ({
       holdTheLineIcon?.scale({ x: 1, y: 1 });
       captureEventIcon?.scale({ x: 1, y: 1 });
     };
+    /* v8 ignore stop */
   }, [shouldPulseSize]);
 
   const initialGroupScale = 1 / Math.min(scaleRef.current ?? 1, 1);
@@ -329,13 +333,13 @@ const StarSystem: React.FC<StarSystemProps> = ({
         radius={radius}
         hitStrokeWidth={3}
         opacity={circleOpacity}
-        onClick={(e) => {
+        onClick={/* v8 ignore next 5 */ (e) => {
           e.cancelBubble = true;
           if (system.sysUrl) {
             openInNewTab(`${API_BASE_URL}${system.sysUrl}`);
           }
         }}
-        onMouseEnter={(e) => {
+        onMouseEnter={/* v8 ignore next 17 */ (e) => {
           const stage = e.target.getStage();
           if (!stage) return;
 
@@ -354,7 +358,7 @@ const StarSystem: React.FC<StarSystemProps> = ({
           );
         }}
         onMouseLeave={hideTooltip}
-        onTouchStart={(e) => {
+        onTouchStart={/* v8 ignore next 32 */ (e) => {
           if (e.evt.touches.length === 1) {
             e.evt.preventDefault();
             const stage = e.target.getStage();

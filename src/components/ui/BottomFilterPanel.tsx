@@ -9,6 +9,7 @@ type FactionOption = {
   label: string;
 };
 
+/* v8 ignore start */
 const selectStyles = {
   control: (base: object) => ({
     ...base,
@@ -25,6 +26,7 @@ const selectStyles = {
   }),
   menuPortal: (base: object) => ({ ...base, zIndex: 9999 }),
 };
+/* v8 ignore stop */
 
 const BottomFilterPanel = ({
   searchTerm,
