@@ -6,12 +6,8 @@ import type { DisplayStarSystemType, FactionDataType } from '../hooks/types';
 import { initialSettings } from '../hooks/types';
 
 // ---------------------------------------------------------------------------
-// vi.hoisted — animation instance tracker available in vi.mock factories
+// vi.hoisted — kept for the Konva mock factory (no longer used for assertions)
 // ---------------------------------------------------------------------------
-
-const { animationInstances } = vi.hoisted(() => ({
-  animationInstances: [] as Array<{ start: ReturnType<typeof vi.fn>; stop: ReturnType<typeof vi.fn> }>,
-}));
 
 // ---------------------------------------------------------------------------
 // Module mocks (factories must be self-contained — no top-level imports)
@@ -62,18 +58,11 @@ vi.mock('react-konva', () => {
 });
 
 vi.mock('konva', () => {
-  class Animation {
-    start = vi.fn();
-    stop = vi.fn();
-    constructor() {
-      animationInstances.push(this as any);
-    }
-  }
   class Text {
     width() { return 50; }
     destroy() {}
   }
-  return { default: { Animation, Text }, __esModule: true };
+  return { default: { Text }, __esModule: true };
 });
 
 // Asset imports resolve to empty strings in the test environment.
@@ -110,6 +99,7 @@ const baseProps = {
   factions: fakeFactions,
   scaleRef: { current: 1 } as React.RefObject<number>,
   registerScaleListener: vi.fn(() => vi.fn()),
+  registerAnimationListener: vi.fn(() => vi.fn()),
   settings: initialSettings,
   showTooltip: vi.fn(),
   hideTooltip: vi.fn(),
@@ -123,7 +113,6 @@ const baseProps = {
 
 describe('StarSystem', () => {
   beforeEach(() => {
-    animationInstances.length = 0;
     // Stub Image so icon loaders don't hang on missing URLs.
     vi.spyOn(window, 'Image' as any).mockImplementation(() => {
       const img: Partial<HTMLImageElement> = {};
@@ -142,47 +131,58 @@ describe('StarSystem', () => {
     expect(container).toBeTruthy();
   });
 
-  it('starts a Konva.Animation when the system is in insurrection', () => {
+  it('subscribes to the animation clock when the system is in insurrection', () => {
+    const unsubscribe = vi.fn();
+    const registerAnimationListener = vi.fn(() => unsubscribe);
     render(
       React.createElement(StarSystem, {
         ...baseProps,
+        registerAnimationListener,
         system: makeSystem({ state: { isInsurrect: true } }),
       })
     );
-    expect(animationInstances.length).toBeGreaterThan(0);
-    expect(animationInstances[0].start).toHaveBeenCalled();
+    expect(registerAnimationListener).toHaveBeenCalled();
   });
 
-  it('stops the insurrection animation on unmount', () => {
+  it('unsubscribes the insurrection animation listener on unmount', () => {
+    const unsubscribe = vi.fn();
+    const registerAnimationListener = vi.fn(() => unsubscribe);
     const { unmount } = render(
       React.createElement(StarSystem, {
         ...baseProps,
+        registerAnimationListener,
         system: makeSystem({ state: { isInsurrect: true } }),
       })
     );
     unmount();
-    expect(animationInstances[0].stop).toHaveBeenCalled();
+    expect(unsubscribe).toHaveBeenCalled();
   });
 
-  it('starts a size-pulse animation for a pirate raid system', () => {
+  it('subscribes to the animation clock for a pirate raid system', () => {
+    const unsubscribe = vi.fn();
+    const registerAnimationListener = vi.fn(() => unsubscribe);
     render(
       React.createElement(StarSystem, {
         ...baseProps,
+        registerAnimationListener,
         system: makeSystem({ state: { hasPirateRaid: true } }),
       })
     );
-    expect(animationInstances.some((a) => a.start.mock.calls.length > 0)).toBe(true);
+    expect(registerAnimationListener).toHaveBeenCalled();
   });
 
-  it('stops the size-pulse animation on unmount', () => {
+  it('unsubscribes the size-pulse listener on unmount', () => {
+    const unsubscribe = vi.fn();
+    const registerAnimationListener = vi.fn(() => unsubscribe);
     const { unmount } = render(
       React.createElement(StarSystem, {
         ...baseProps,
+        registerAnimationListener,
         system: makeSystem({ state: { hasPirateRaid: true } }),
       })
     );
     unmount();
-    expect(animationInstances.every((a) => a.stop.mock.calls.length > 0)).toBe(true);
+    expect(unsubscribe).toHaveBeenCalled();
   });
 
   it('calls the registerScaleListener unsubscribe on unmount', () => {

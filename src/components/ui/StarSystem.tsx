@@ -1,6 +1,6 @@
 import { memo, useEffect, useRef, useState } from 'react';
 import { Circle, Group, Image as KonvaImage } from 'react-konva';
-import Konva from 'konva';
+import type Konva from 'konva';
 import { openInNewTab } from '../helpers';
 import pirateIconUrl from '../../assets/joli-rouge-icon.svg';
 import holdTheLineIconUrl from '../../assets/shield.svg';
@@ -48,6 +48,7 @@ interface StarSystemProps {
   factions: FactionDataType;
   scaleRef: React.RefObject<number>;
   registerScaleListener: (listener: (scale: number) => void) => () => void;
+  registerAnimationListener: (listener: (time: number) => void) => () => void;
   settings: Settings;
   showTooltip: (
     text: string,
@@ -69,6 +70,7 @@ const StarSystem: React.FC<StarSystemProps> = ({
   system,
   scaleRef,
   registerScaleListener,
+  registerAnimationListener,
   factions,
   settings,
   showTooltip,
@@ -193,27 +195,24 @@ const StarSystem: React.FC<StarSystemProps> = ({
     const pulseNode = insurrectPulseRef.current;
     const pulseMaxOpacity = Math.min(0.525, circleOpacity * 0.675);
 
-    const animation = new Konva.Animation((frame) => {
-      if (!frame) return;
-      const wave = (Math.sin(frame.time * 0.0055) + 1) / 2;
+    const unregister = registerAnimationListener((time) => {
+      const wave = (Math.sin(time * 0.0055) + 1) / 2;
       const scale = 0.72 + wave * 1.18;
       const pulseOpacity = (0.225 + wave * 0.775) * pulseMaxOpacity;
 
       glowNode.opacity(0.4375 + wave * 0.5625);
       pulseNode.scale({ x: scale, y: scale });
       pulseNode.opacity(pulseOpacity);
-    }, pulseNode.getLayer());
-
-    animation.start();
+    });
 
     return () => {
-      animation.stop();
+      unregister();
       glowNode.opacity(0);
       pulseNode.scale({ x: 1, y: 1 });
       pulseNode.opacity(0);
     };
     /* v8 ignore stop */
-  }, [isInsurrectionLike, circleOpacity]);
+  }, [isInsurrectionLike, circleOpacity, registerAnimationListener]);
 
   useEffect(() => {
     if (!shouldPulseSize || !systemCircleRef.current) return;
@@ -223,18 +222,15 @@ const StarSystem: React.FC<StarSystemProps> = ({
 
     // Read icon nodes from refs each frame so the animation picks up newly-mounted
     // icons without restarting — avoids a mid-frame glitch when an image loads.
-    const animation = new Konva.Animation((frame) => {
-      if (!frame) return;
-      const wave = (Math.sin(frame.time * 0.0055) + 1) / 2;
+    const unregister = registerAnimationListener((time) => {
+      const wave = (Math.sin(time * 0.0055) + 1) / 2;
       const scale = 0.92 + wave * 0.655;
 
       systemNode.scale({ x: scale, y: scale });
       pirateIconRef.current?.scale({ x: scale, y: scale });
       holdTheLineIconRef.current?.scale({ x: scale, y: scale });
       captureEventIconRef.current?.scale({ x: scale, y: scale });
-    }, systemNode.getLayer());
-
-    animation.start();
+    });
 
     // Capture ref values now so the cleanup can reset their scale even if the
     // icons unmount before this effect's cleanup runs.
@@ -243,14 +239,14 @@ const StarSystem: React.FC<StarSystemProps> = ({
     const captureEventIcon = captureEventIconRef.current;
 
     return () => {
-      animation.stop();
+      unregister();
       systemNode.scale({ x: 1, y: 1 });
       pirateIcon?.scale({ x: 1, y: 1 });
       holdTheLineIcon?.scale({ x: 1, y: 1 });
       captureEventIcon?.scale({ x: 1, y: 1 });
     };
     /* v8 ignore stop */
-  }, [shouldPulseSize]);
+  }, [shouldPulseSize, registerAnimationListener]);
 
   const initialGroupScale = 1 / Math.min(scaleRef.current ?? 1, 1);
 

@@ -132,6 +132,7 @@ export const GalaxyMapRender = ({
     setZoomScaleFactor,
     registerScaleListener,
     notifyScaleListeners,
+    registerAnimationListener,
     handlers: { onWheel, onDragMove },
   } = useGalaxyViewport();
   const [searchTerm, setSearchTerm] = useState('');
@@ -331,6 +332,7 @@ export const GalaxyMapRender = ({
             key={system.id}
             scaleRef={scaleRef}
             registerScaleListener={registerScaleListener}
+            registerAnimationListener={registerAnimationListener}
             system={system}
             factions={factions}
             settings={settings}
@@ -347,6 +349,7 @@ export const GalaxyMapRender = ({
       factions,
       hideTooltip,
       normalizedSearch,
+      registerAnimationListener,
       registerScaleListener,
       scaleRef,
       settings,

@@ -31,6 +31,34 @@ export function useGalaxyViewport({
     return () => { scaleListenersRef.current.delete(listener); };
   }, []);
 
+  // Shared animation clock: one rAF loop drives all pulsing StarSystem nodes
+  // instead of each system owning its own Konva.Animation instance.
+  const animListenersRef = useRef<Set<(time: number) => void>>(new Set());
+  const animFrameRef = useRef<number | null>(null);
+  // Use a ref-stored function so the rAF callback always closes over the
+  // current listener set and stageRef without needing to restart the loop.
+  const runAnimLoopRef = useRef<() => void>(() => {});
+  runAnimLoopRef.current = () => {
+    const t = performance.now();
+    animListenersRef.current.forEach((fn) => fn(t));
+    stageRef.current?.batchDraw();
+    animFrameRef.current = requestAnimationFrame(runAnimLoopRef.current);
+  };
+
+  const registerAnimationListener = useCallback((listener: (time: number) => void) => {
+    if (animListenersRef.current.size === 0) {
+      animFrameRef.current = requestAnimationFrame(runAnimLoopRef.current);
+    }
+    animListenersRef.current.add(listener);
+    return () => {
+      animListenersRef.current.delete(listener);
+      if (animListenersRef.current.size === 0 && animFrameRef.current !== null) {
+        cancelAnimationFrame(animFrameRef.current);
+        animFrameRef.current = null;
+      }
+    };
+  }, []);
+
   const notifyScaleListeners = useCallback((scale: number) => {
     scaleListenersRef.current.forEach((fn) => fn(scale));
   }, []);
@@ -155,6 +183,7 @@ export function useGalaxyViewport({
     setZoomScaleFactor,
     registerScaleListener,
     notifyScaleListeners,
+    registerAnimationListener,
 
     handlers: {
       onWheel,
