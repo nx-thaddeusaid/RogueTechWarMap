@@ -232,4 +232,54 @@ describe('useGalaxyViewport', () => {
     act(() => result.current.notifyScaleListeners(3));
     expect(listener).toHaveBeenCalledTimes(1); // not called again
   });
+
+  it('registerAnimationListener schedules the rAF loop and calls the listener each frame', () => {
+    const { result } = renderHook(() => useGalaxyViewport());
+    const listener = vi.fn();
+
+    act(() => {
+      result.current.registerAnimationListener(listener);
+    });
+
+    expect(rafQueue).toHaveLength(1);
+
+    // Flush one iteration — covers the runAnimLoopRef body (lines 42-45).
+    act(() => flushRaf());
+    expect(listener).toHaveBeenCalledTimes(1);
+    // The loop reschedules itself.
+    expect(rafQueue).toHaveLength(1);
+  });
+
+  it('registerAnimationListener does not double-schedule when a second listener is added', () => {
+    const { result } = renderHook(() => useGalaxyViewport());
+    const listenerA = vi.fn();
+    const listenerB = vi.fn();
+
+    act(() => {
+      result.current.registerAnimationListener(listenerA);
+      result.current.registerAnimationListener(listenerB);
+    });
+
+    // Only one rAF should have been scheduled (the second add sees size > 0).
+    expect(rafQueue).toHaveLength(1);
+
+    act(() => flushRaf());
+    expect(listenerA).toHaveBeenCalledTimes(1);
+    expect(listenerB).toHaveBeenCalledTimes(1);
+  });
+
+  it('registerAnimationListener unsubscribe cancels the loop when the last listener leaves', () => {
+    const cancelSpy = vi.spyOn(window, 'cancelAnimationFrame');
+    const { result } = renderHook(() => useGalaxyViewport());
+    const listener = vi.fn();
+
+    let unsubscribe!: () => void;
+    act(() => {
+      unsubscribe = result.current.registerAnimationListener(listener);
+    });
+
+    // Remove the only listener — should cancel the pending frame.
+    act(() => unsubscribe());
+    expect(cancelSpy).toHaveBeenCalled();
+  });
 });
