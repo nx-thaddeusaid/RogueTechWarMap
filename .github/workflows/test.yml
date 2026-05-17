@@ -2,7 +2,7 @@ name: Test
 
 on:
   push:
-    branches: [main, system-state-nyx]
+    branches: [main, system-state-nyx, nightmare-edition]
   pull_request:
     branches: [main, system-state-nyx]
 
