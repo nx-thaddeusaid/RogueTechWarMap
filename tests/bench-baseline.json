@@ -1,0 +1,25 @@
+{
+  "_note": "Baselines at ~1/4 of local measurements. CI runners are ~2-4x slower. Regression gate: fail if actual < baseline/2 (i.e. >4x local slowdown). Update after intentional perf changes.",
+  "_local_machine_hz": {
+    "current: Number(posX) per iteration": 105000,
+    "optimised: pre-converted x/y fields": 106000,
+    "no faction filter (selectedFactions empty)": 35000,
+    "single faction selected (Set.has every iteration)": 29000,
+    "three factions selected": 27000,
+    "800 systems, composite key (before)": 7900,
+    "800 systems, system.id key (after)": 68000,
+    "2 000 systems, 4 factions": 39000,
+    "current: no x/y in projection": 9500,
+    "with x/y in same spread": 9300
+  },
+  "current: Number(posX) per iteration": 10000,
+  "optimised: pre-converted x/y fields": 9500,
+  "no faction filter (selectedFactions empty)": 8500,
+  "single faction selected (Set.has every iteration)": 7000,
+  "three factions selected": 6500,
+  "800 systems, composite key (before)": 1900,
+  "800 systems, system.id key (after)": 16000,
+  "2 000 systems, 4 factions": 9000,
+  "current: no x/y in projection": 2300,
+  "with x/y in same spread": 2200
+}

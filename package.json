@@ -13,6 +13,7 @@
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
     "bench": "vitest bench",
+    "bench:ci": "vitest bench 2>&1 | node tests/scripts/check-bench-regression.mjs",
     "prepare": "simple-git-hooks"
   },
   "dependencies": {
